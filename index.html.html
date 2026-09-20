@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Speed Quiz</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        .question { margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Registration Screen -->
+    <div id="start-screen">
+        <h2>Welcome to the Speed Quiz</h2>
+        <input type="text" id="playerName" placeholder="Enter your name" required>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="hidden">
+        <h2>Time: <span id="timer">0.0</span>s</h2>
+        <div id="questions-container">Loading questions...</div>
+        <button onclick="submitQuiz()" id="submit-btn" class="hidden">Submit Answers</button>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="hidden">
+        <h2>Live Leaderboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Time (s)</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Data gets injected here -->
+            </tbody>
+        </table>
+        <br>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzZ8my2PjCDeVmzKfPwLD0d7EtL_yrrqfUG1_JOa4IpQEwuAxsDWr1ONlBFrKBj5Twvgg/exec';
+    let startTime;
+    let timerInterval;
+    let userAnswers = {};
+
+    async function startQuiz() {
+        const name = document.getElementById('playerName').value;
+        if (!name) return alert('Please enter a name');
+
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        try {
+            // Fetch Questions
+            const response = await fetch(`${API_URL}?action=getQuestions`);
+            const textResponse = await response.text();
+            
+            // Safety check: If Google returns HTML (a login screen), deployment permissions are wrong.
+            if (textResponse.startsWith('<')) {
+                throw new Error("Google Apps Script is blocked. Did you deploy with Access set to 'Anyone'?");
+            }
+
+            const questions = JSON.parse(textResponse);
+            renderQuestions(questions);
+            
+            // Start Timer
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                document.getElementById('timer').innerText = ((Date.now() - startTime) / 1000).toFixed(1);
+            }, 100);
+
+        } catch (error) {
+            console.error("Error:", error);
+            document.getElementById('questions-container').innerHTML = `<p class="error">Error loading questions: ${error.message}</p>`;
+        }
+    }
+
+    function renderQuestions(questions) {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = ''; 
+        
+        questions.forEach((q, index) => {
+            let html = `<div class="question">
+                <h3>${index + 1}. ${q.question}</h3>`;
+            
+            q.options.forEach(opt => {
+                // FIX: Added String(opt) to prevent crashes when an answer is a number
+                html += `<label>
+                    <input type="radio" name="q_${q.id}" value="${String(opt).replace(/"/g, '&quot;')}" onchange="saveAnswer('${q.id}', this.value)"> ${opt}
+                </label><br>`;
+            });
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+        document.getElementById('submit-btn').classList.remove('hidden');
+    }
+
+    function saveAnswer(qId, answer) {
+        userAnswers[qId] = answer;
+    }
+
+    async function submitQuiz() {
+        clearInterval(timerInterval);
+        const timeTaken = Date.now() - startTime;
+        const name = document.getElementById('playerName').value;
+
+        // Save the old HTML just in case submission fails
+        const quizContainer = document.getElementById('quiz-screen');
+        const oldHTML = quizContainer.innerHTML;
+        quizContainer.innerHTML = '<h2>Submitting your answers... please wait!</h2>';
+
+        try {
+            // FIX: Added 'text/plain' to bypass strict browser CORS preflight blocks on Google Apps Script
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    answers: userAnswers,
+                    timeTaken: timeTaken
+                })
+            });
+
+            loadLeaderboard();
+        } catch (error) {
+            console.error("Submission Error:", error);
+            alert("Failed to submit. Check console for details.");
+            quizContainer.innerHTML = oldHTML; // Restore test so they can click submit again
+        }
+    }
+
+    async function loadLeaderboard() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('leaderboard-screen').classList.remove('hidden');
+
+        try {
+            const response = await fetch(`${API_URL}?action=getLeaderboard`);
+            const leaderboard = await response.json();
+
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+
+            leaderboard.forEach((player, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${player.name}</td>
+                        <td>${player.score}</td>
+                        <td>${(player.time / 1000).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        } catch (error) {
+            document.getElementById('leaderboard-body').innerHTML = `<tr><td colspan="4" class="error">Failed to load leaderboard.</td></tr>`;
+        }
+    }
+</script>
+
+</body>
+</html>
