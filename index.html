@@ -293,12 +293,20 @@
             tbody.innerHTML = '';
 
             leaderboard.forEach((player, index) => {
+                // MATH CONVERSION: Milliseconds to Minutes and Seconds
+                let totalSeconds = player.time / 1000;
+                let minutes = Math.floor(totalSeconds / 60);
+                let seconds = (totalSeconds % 60).toFixed(2);
+                
+                // Format display (e.g., "5m 10.52s" or just "45.00s")
+                let displayTime = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${player.name}</td>
                         <td>${player.score}</td>
-                        <td>${(player.time / 1000).toFixed(2)}</td>
+                        <td>${displayTime}</td>
                     </tr>
                 `;
             });
