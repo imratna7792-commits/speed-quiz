@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Speed Quiz</title>
     <style>
+        /* FIX 1: This stops inputs from overflowing outside their containers */
+        * { box-sizing: border-box; }
+
         /* Global Styles */
         body { 
             font-family: 'Khmer OS Battambang', 'Suwannaphum', 'Segoe UI', sans-serif; 
@@ -47,6 +50,7 @@
             padding: 40px 30px; 
             border-radius: 12px; 
             box-shadow: 0 8px 16px rgba(0,0,0,0.3); 
+            width: 100%;
         }
 
         .hidden { display: none; }
@@ -57,6 +61,7 @@
             color: #060737;
             margin-top: 0;
             margin-bottom: 30px;
+            line-height: 1.5;
         }
 
         /* Form Controls */
@@ -64,10 +69,12 @@
             display: flex;
             gap: 15px;
             justify-content: center;
+            width: 100%;
         }
 
         input[type="text"] {
             flex-grow: 1;
+            width: 100%;
             padding: 12px 15px;
             border: 1px solid #777;
             border-radius: 6px;
@@ -85,6 +92,7 @@
             font-family: inherit;
             cursor: pointer; 
             transition: background 0.3s;
+            white-space: nowrap; /* Prevents text from breaking into two lines */
         }
 
         button:hover { background: #0c4394; }
@@ -137,6 +145,26 @@
         }
         
         .error { color: red; font-weight: bold; text-align: center; }
+
+        /* FIX 2: MOBILE RESPONSIVENESS */
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column; /* Stacks the text box and button on phones */
+                gap: 10px;
+            }
+            button {
+                width: 100%; /* Makes the button take up the full width */
+            }
+            .container {
+                padding: 30px 20px; /* Reduces the thick white padding on small screens */
+            }
+            .top-header {
+                font-size: 12px; /* Scales down header text so it doesn't bunch up */
+            }
+            .left-logo img {
+                width: 55px; /* Scales down logo */
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,7 +172,6 @@
 <!-- Header Section with Logos -->
 <div class="top-header">
     <div class="left-logo">
-    <!-- Updated with your exact Google Drive logo -->
     <img src="logo.png" alt="Logo">
     <div>ក្រសួងមុខងារសាធារណៈ<br>អគ្គលេខាធិការដ្ឋាន<br>នាយកដ្ឋានធនធានមនុស្ស</div>
 </div>
@@ -168,26 +195,28 @@
         <div class="timer-text">រយៈពេល: <span id="timer">0.0</span>s</div>
         <div id="questions-container">កំពុងទាញយកសំណួរ...</div>
         <br>
-        <button onclick="submitQuiz()" id="submit-btn" class="hidden">បញ្ជូនចម្លើយ</button>
+        <button onclick="submitQuiz()" id="submit-btn" class="hidden" style="width:100%;">បញ្ជូនចម្លើយ</button>
     </div>
 
     <!-- Leaderboard Screen -->
     <div id="leaderboard-screen" class="hidden">
         <h2 class="title">តារាងពិន្ទុ</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ល.រ</th>
-                    <th>ឈ្មោះ</th>
-                    <th>ពិន្ទុ</th>
-                    <th>រយៈពេល</th>
-                </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-                <!-- Data gets injected here -->
-            </tbody>
-        </table>
-        <button onclick="location.reload()">សាកល្បងម្ដងទៀត!</button>
+        <div style="overflow-x: auto;"> <!-- Allows table to scroll left/right on tiny phones -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>ល.រ</th>
+                        <th>ឈ្មោះ</th>
+                        <th>ពិន្ទុ</th>
+                        <th>រយៈពេល</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Data gets injected here -->
+                </tbody>
+            </table>
+        </div>
+        <button onclick="location.reload()" style="width:100%;">សាកល្បងម្ដងទៀត!</button>
     </div>
 </div>
 
@@ -205,7 +234,6 @@
         document.getElementById('quiz-screen').classList.remove('hidden');
         
         try {
-            // Fetch Questions
             const response = await fetch(`${API_URL}?action=getQuestions`);
             const textResponse = await response.text();
             
@@ -216,7 +244,6 @@
             const questions = JSON.parse(textResponse);
             renderQuestions(questions);
             
-            // Start Timer
             startTime = Date.now();
             timerInterval = setInterval(() => {
                 document.getElementById('timer').innerText = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -293,12 +320,9 @@
             tbody.innerHTML = '';
 
             leaderboard.forEach((player, index) => {
-                // MATH CONVERSION: Milliseconds to Minutes and Seconds
                 let totalSeconds = player.time / 1000;
                 let minutes = Math.floor(totalSeconds / 60);
                 let seconds = (totalSeconds % 60).toFixed(2);
-                
-                // Format display (e.g., "5m 10.52s" or just "45.00s")
                 let displayTime = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
                 tbody.innerHTML += `
