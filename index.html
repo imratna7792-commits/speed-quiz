@@ -1,56 +1,193 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="km">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Speed Quiz</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Global Styles */
+        body { 
+            font-family: 'Khmer OS Battambang', 'Suwannaphum', 'Segoe UI', sans-serif; 
+            background-color: #060737; /* Deep Navy Blue */
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Header Section matching the reference */
+        .top-header {
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            color: #d4af37; /* Gold text */
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .left-logo {
+            text-align: center;
+        }
+        
+        .left-logo img {
+            width: 70px;
+            margin-bottom: 10px;
+        }
+        
+        .right-text {
+            text-align: center;
+        }
+
+        /* Main White Container */
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3); 
+        }
+
         .hidden { display: none; }
-        .question { margin-bottom: 20px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        .error { color: red; font-weight: bold; }
+        
+        h2.title {
+            text-align: center;
+            font-size: 20px;
+            color: #060737;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        /* Form Controls */
+        .input-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #777;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        button { 
+            background: #09316b; 
+            color: white; 
+            border: none; 
+            padding: 12px 30px; 
+            border-radius: 6px; 
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer; 
+            transition: background 0.3s;
+        }
+
+        button:hover { background: #0c4394; }
+
+        /* Quiz Screen Styles */
+        .timer-text {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #060737;
+            margin-bottom: 30px;
+        }
+
+        .question { 
+            margin-bottom: 25px; 
+        }
+        
+        .question h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #000;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Leaderboard Table Styles */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+        }
+        
+        th, td { 
+            padding: 12px; 
+            text-align: center; 
+            border: 1px solid #ddd; 
+        }
+        
+        th { 
+            background: #09316b; 
+            color: white; 
+            font-weight: normal;
+        }
+        
+        .error { color: red; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
+<!-- Header Section with Logos -->
+<div class="top-header">
+    <div class="left-logo">
+        <!-- Replace the src URL below with a link to your actual golden logo image -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Emblem_of_Cambodia.svg/200px-Emblem_of_Cambodia.svg.png" alt="Logo">
+        <div>ក្រសួងមុខងារសាធារណៈ<br>អគ្គលេខាធិការដ្ឋាន<br>នាយកដ្ឋានធនធានមនុស្ស</div>
+    </div>
+    <div class="right-text">
+        <div>ព្រះរាជាណាចក្រកម្ពុជា<br>ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+    </div>
+</div>
+
 <div class="container">
     <!-- Registration Screen -->
     <div id="start-screen">
-        <h2>Welcome to the Speed Quiz</h2>
-        <input type="text" id="playerName" placeholder="Enter your name" required>
-        <button onclick="startQuiz()">Start Quiz</button>
+        <h2 class="title">សូមស្វាគមន៍សម្រាប់ការចូលរួមឆ្លើយសំណួរ!</h2>
+        <div class="input-group">
+            <input type="text" id="playerName" placeholder="សូមបំពេញឈ្មោះរបស់លោក លោកស្រី" required>
+            <button onclick="startQuiz()">ចាប់ផ្ដើម!</button>
+        </div>
     </div>
 
     <!-- Quiz Screen -->
     <div id="quiz-screen" class="hidden">
-        <h2>Time: <span id="timer">0.0</span>s</h2>
-        <div id="questions-container">Loading questions...</div>
-        <button onclick="submitQuiz()" id="submit-btn" class="hidden">Submit Answers</button>
+        <div class="timer-text">រយៈពេល: <span id="timer">0.0</span>s</div>
+        <div id="questions-container">កំពុងទាញយកសំណួរ...</div>
+        <br>
+        <button onclick="submitQuiz()" id="submit-btn" class="hidden">បញ្ជូនចម្លើយ</button>
     </div>
 
     <!-- Leaderboard Screen -->
     <div id="leaderboard-screen" class="hidden">
-        <h2>Live Leaderboard</h2>
+        <h2 class="title">តារាងពិន្ទុ</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Rank</th>
-                    <th>Name</th>
-                    <th>Score</th>
-                    <th>Time (s)</th>
+                    <th>ល.រ</th>
+                    <th>ឈ្មោះ</th>
+                    <th>ពិន្ទុ</th>
+                    <th>រយៈពេល</th>
                 </tr>
             </thead>
             <tbody id="leaderboard-body">
                 <!-- Data gets injected here -->
             </tbody>
         </table>
-        <br>
-        <button onclick="location.reload()">Play Again</button>
+        <button onclick="location.reload()">សាកល្បងម្ដងទៀត!</button>
     </div>
 </div>
 
@@ -62,7 +199,7 @@
 
     async function startQuiz() {
         const name = document.getElementById('playerName').value;
-        if (!name) return alert('Please enter a name');
+        if (!name) return alert('សូមបំពេញឈ្មោះរបស់អ្នក (Please enter a name)');
 
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('quiz-screen').classList.remove('hidden');
@@ -72,7 +209,6 @@
             const response = await fetch(`${API_URL}?action=getQuestions`);
             const textResponse = await response.text();
             
-            // Safety check: If Google returns HTML (a login screen), deployment permissions are wrong.
             if (textResponse.startsWith('<')) {
                 throw new Error("Google Apps Script is blocked. Did you deploy with Access set to 'Anyone'?");
             }
@@ -101,10 +237,9 @@
                 <h3>${index + 1}. ${q.question}</h3>`;
             
             q.options.forEach(opt => {
-                // FIX: Added String(opt) to prevent crashes when an answer is a number
                 html += `<label>
                     <input type="radio" name="q_${q.id}" value="${String(opt).replace(/"/g, '&quot;')}" onchange="saveAnswer('${q.id}', this.value)"> ${opt}
-                </label><br>`;
+                </label>`;
             });
             html += `</div>`;
             container.innerHTML += html;
@@ -121,13 +256,11 @@
         const timeTaken = Date.now() - startTime;
         const name = document.getElementById('playerName').value;
 
-        // Save the old HTML just in case submission fails
         const quizContainer = document.getElementById('quiz-screen');
         const oldHTML = quizContainer.innerHTML;
-        quizContainer.innerHTML = '<h2>Submitting your answers... please wait!</h2>';
+        quizContainer.innerHTML = '<h2 class="title" style="margin-top:20px;">កំពុងបញ្ជូនចម្លើយ...</h2>';
 
         try {
-            // FIX: Added 'text/plain' to bypass strict browser CORS preflight blocks on Google Apps Script
             await fetch(API_URL, {
                 method: 'POST',
                 headers: {
@@ -144,7 +277,7 @@
         } catch (error) {
             console.error("Submission Error:", error);
             alert("Failed to submit. Check console for details.");
-            quizContainer.innerHTML = oldHTML; // Restore test so they can click submit again
+            quizContainer.innerHTML = oldHTML; 
         }
     }
 
